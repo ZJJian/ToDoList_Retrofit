@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">ToDoList</string>
+    <string name="title_activity_to_do_lists">ToDoLists</string>
+</resources>
