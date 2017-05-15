@@ -21,6 +21,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.IOException;
@@ -31,14 +32,25 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import okhttp3.Interceptor;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import okhttp3.Callback;
+//import okhttp3.Call;
+import retrofit2.converter.gson.GsonConverterFactory;
+import retrofit2.http.GET;
+import retrofit2.http.Path;
+import retrofit2.Call;
+//import retrofit2.Response;
+//import retrofit2.Callback;
+import retrofit2.Retrofit;
+import retrofit2.converter.scalars.ScalarsConverterFactory;
 
 public class ToDoLists extends AppCompatActivity {
-
+    public static final String TAG = "app";
     private NotesAdapter notesAdapter;
     private List<Note> notes;
     private String token;
@@ -50,6 +62,8 @@ public class ToDoLists extends AppCompatActivity {
     private static final String passwordField = "PASSWORD";
     private static final String tokenField = "TOKEN";
     private static final int EDIT=1;
+
+    private NoteApi mService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,6 +108,38 @@ public class ToDoLists extends AppCompatActivity {
                 return false;
             }
         });
+
+
+        OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
+        httpClient.readTimeout(1000*30, TimeUnit.MILLISECONDS);
+        httpClient.writeTimeout(600, TimeUnit.MILLISECONDS);
+        httpClient.addInterceptor(new Interceptor() {
+            @Override
+            public Response intercept(Interceptor.Chain chain) throws IOException {
+                Request original = chain.request();
+
+                // Request customization: add request headers
+                Request.Builder requestBuilder = original.newBuilder()
+                        .header("x-access-token",token); // <-- this is the important line
+
+                Request request = requestBuilder.build();
+                return chain.proceed(request);
+            }
+        });
+        Log.d("APP","token " +token);
+
+        Gson gson = new GsonBuilder()
+        .setLenient()
+        .create();
+
+        OkHttpClient client = httpClient.build();
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("https://todolist-token.herokuapp.com/")
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .client(client)
+                .build();
+
+        mService = retrofit.create(NoteApi.class);
     }
 
     @Override
@@ -138,7 +184,11 @@ public class ToDoLists extends AppCompatActivity {
     private void updateNotes() {
         //while(getJson==null)
         //getNotesFromServer();
-        new MyTask().execute(" ");
+
+
+
+        GetNoteList();
+        //new MyTask().execute(" ");
 //        AsyncTask task = new MyTask();
 //        task.execute(" ");
 //        task.cancel(true);
@@ -146,9 +196,9 @@ public class ToDoLists extends AppCompatActivity {
     }
     private  void showList()
     {
-        Gson gson = new Gson();
-        Type listType = new TypeToken<ArrayList<Note>>(){}.getType();
-        notes = gson.fromJson(getJson,listType);
+//        Gson gson = new Gson();
+//        Type listType = new TypeToken<ArrayList<Note>>(){}.getType();
+//        notes = gson.fromJson(getJson,listType);
         notesAdapter.setNotes(notes);
 
     }
@@ -162,55 +212,43 @@ public class ToDoLists extends AppCompatActivity {
         recyclerView.setAdapter(notesAdapter);
 
     }
-    class MyTask extends AsyncTask<String, String, String> {
-        protected void onPreExecute(){
-            // in main thread
-        }
+    private void GetNoteList()
+    {
+        Call<List<Note>> call = mService.getNoteList();
 
-        protected String doInBackground(String... params){
-            // in background thread
-            //final ExecutorService service = Executors.newFixedThreadPool(10);
-            //String getJson;
-            OkHttpClient.Builder b = new OkHttpClient.Builder();
-            b.readTimeout(1000*30, TimeUnit.MILLISECONDS);
-            b.writeTimeout(600, TimeUnit.MILLISECONDS);
+        call.enqueue(new retrofit2.Callback<List<Note>>() {
+            @Override
+            public void onResponse(Call<List<Note>> call, retrofit2.Response<List<Note>> response) {
+                Log.d(TAG, "onResponse: ");
+                notes = response.body();
+                showList();
 
-            final OkHttpClient client = b.build();
-            Request request = new Request.Builder()
-                    .url("https://todolist-token.herokuapp.com/list")
-                    .header("x-access-token",token)
-                    .get()//
-                    .build();
-            try {
-
-
-                Log.d("app", "run: execute");
-                final Response response = client.newCall(request).execute();
-                final String resStr = response.body().string();
-                Log.d("app", "run: resStr: " + resStr);
-                getJson=resStr;
-                return resStr;
-
-            } catch (IOException e) {
-                e.printStackTrace();
-                return "";
             }
-        }
 
-        protected void onProgressUpdate(String... progress){
-            // in main thread
-        }
+            @Override
+            public void onFailure(Call<List<Note>> call, Throwable t) {
+                Log.d(TAG, "onFailure: ");
+            }
+        });
+    }
+    private void DeleteNote(Long noteId)
+    {
+        Log.d(TAG, "DeleteNote: ");
+        Call<String> call = mService.delete(noteId);
 
-        protected void onPostExecute(String result){
-            // in main thread
-            showList();
-        }
+        call.enqueue(new retrofit2.Callback<String>() {
+            @Override
+            public void onResponse(Call<String> call, retrofit2.Response<String> response) {
+                Log.d(TAG, "DeleteNoteonResponse: "+response.body().toString());
+                //showList();
 
-        protected void onCancelled(String result){
-            // in main thread
+            }
 
-        }
-
+            @Override
+            public void onFailure(Call<String> call, Throwable t) {
+                Log.d(TAG, "DeleteNoteonFailure: ");
+            }
+        });
     }
     NotesAdapter.NoteClickListener noteClickListener = new NotesAdapter.NoteClickListener() {
         @Override
@@ -242,7 +280,9 @@ public class ToDoLists extends AppCompatActivity {
                 //noteDao.deleteByKey(noteId);
                 notes.remove(getIndex(noteId,notes));
                 notesAdapter.setNotes(notes);
-                new DeleteTask().execute(noteId.toString());
+                DeleteNote(noteId);
+
+                //new DeleteTask().execute(noteId.toString());
                 Log.d("DaoExample", "Deleted note, ID: " + noteId);
 
 
@@ -283,53 +323,6 @@ public class ToDoLists extends AppCompatActivity {
         }
 
         return -1;
-    }
-    class DeleteTask extends AsyncTask<String, String, String> {
-        protected void onPreExecute(){
-            // in main thread
-        }
-
-        protected String doInBackground(String... params){
-            // in background thread
-
-            OkHttpClient.Builder b = new OkHttpClient.Builder();
-            b.readTimeout(1000*30, TimeUnit.MILLISECONDS);
-            b.writeTimeout(600, TimeUnit.MILLISECONDS);
-
-            final OkHttpClient client = b.build();
-            Request request = new Request.Builder()
-                    .url("https://todolist-token.herokuapp.com/list/"+params[0])
-                    .header("x-access-token",token)
-                    .delete()//
-                    .build();
-            try {
-                Log.d("app", "run: execute");
-                final Response response = client.newCall(request).execute();
-                final String resStr = response.body().string();
-                Log.d("app", "run: resStr: " + resStr);
-                return resStr;
-
-            } catch (IOException e) {
-                e.printStackTrace();
-                return "";
-            }
-        }
-
-        protected void onProgressUpdate(String... progress){
-            // in main thread
-        }
-
-        protected void onPostExecute(String result){
-            // in main thread
-            //showList();
-            //new MyTask().execute(" ");
-        }
-
-        protected void onCancelled(String result){
-            // in main thread
-
-        }
-
     }
 
 }

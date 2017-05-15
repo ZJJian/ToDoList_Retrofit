@@ -1,5 +1,8 @@
 package com.example.zhijia_jian.todolist_retrofit;
 
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
+
 import org.greenrobot.greendao.annotation.Convert;
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Generated;
@@ -14,14 +17,23 @@ import org.greenrobot.greendao.annotation.NotNull;
 //@Entity(indexes = {
 //        @Index(value = "text, date DESC", unique = true)
 //})
+
 public class Note {
 
     //@Id
+    @SerializedName("id")
+    @Expose
     private Long id;
 
+    @SerializedName("content")
+    @Expose
     private String content;
+
     private String comment;
     private java.util.Date date;
+
+    @SerializedName("title")
+    @Expose
     private String title;
 
 

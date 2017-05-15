@@ -22,9 +22,9 @@ public class ApiClient {
      * 簡單示範幾個方法，實際使用可在這裡作內容驗證
      */
 
-    public Note showNote(int id) {
-        return noteApi.show(id);
-    }
+//    public Note showNote(int id) {
+//        return noteApi.getNote(id);
+//    }
 
 //    public Comment createComment(int articleId, String content) {
 //        return commentsApi.create(articleId, content);

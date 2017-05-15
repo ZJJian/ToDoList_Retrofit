@@ -14,41 +14,44 @@ import retrofit2.http.PUT;
 import retrofit2.http.Path;
 
 public interface NoteApi {
-    String CONTENT = "content";
 
-    //文章列表
+    //Login
+    @POST("/user/login")
+    @FormUrlEncoded
+    Call<Token> login(@Field("username") String username,@Field("password") String password);
+
+
+    //Login
+    @POST("/user/register")
+    @FormUrlEncoded
+    Call<String> register(@Field("username") String username,@Field("password") String password);
+
+
+    //get note list
     @GET("/list")
     Call<List<Note>> getNoteList();
 
-    //取得某篇文章
+    //get a note
     @GET("/list/{id}")
     Call<Note> getNote(
             @Path("id") int id
     );
 
-    //新增文章
+    //add a new note
+    //@FormUrlEncoded
     @POST("/list")
-    @FormUrlEncoded
-    Note create(
-            @Field(CONTENT) String content
-    );
+    Call<String> post(@Body Note note);
 
-    //編輯文章
-    @PUT("/list/{id}")
-    @FormUrlEncoded
-    Note update(
-            @Path("id") int id,
-            @Field(CONTENT) String content
-    );
 
-    //編輯文章
+
+    //edit a note
     @PUT("/list/{id}")
-    Note update(
-            @Path("id") int id,
+    Call<String> update(
+            @Path("id") Long id,
             @Body Note note
     );
 
-    //刪除文章
+    //delete a note
     @DELETE("/list/{id}")
-    Response delete(@Path("id") int id);
+    Call<String> delete(@Path("id") Long id);
 }

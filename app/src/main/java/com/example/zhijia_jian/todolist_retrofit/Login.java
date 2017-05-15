@@ -16,6 +16,9 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -23,10 +26,13 @@ import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
 import okhttp3.FormBody;
+import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 
 public class Login extends AppCompatActivity {
@@ -43,6 +49,7 @@ public class Login extends AppCompatActivity {
     private static final String passwordField = "PASSWORD";
     private static final String tokenField = "TOKEN";
 
+    private NoteApi mService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,6 +89,37 @@ public class Login extends AppCompatActivity {
         }
 
 
+        OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
+        httpClient.readTimeout(1000*30, TimeUnit.MILLISECONDS);
+        httpClient.writeTimeout(600, TimeUnit.MILLISECONDS);
+        httpClient.addInterceptor(new Interceptor() {
+            @Override
+            public Response intercept(Interceptor.Chain chain) throws IOException {
+                Request original = chain.request();
+
+                // Request customization: add request headers
+                Request.Builder requestBuilder = original.newBuilder();
+                //        .header("x-access-token",token); // <-- this is the important line
+
+                Request request = requestBuilder.build();
+                return chain.proceed(request);
+            }
+        });
+        Log.d("APP","token " +token);
+
+        Gson gson = new GsonBuilder()
+                .setLenient()
+                .create();
+
+        OkHttpClient client = httpClient.build();
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("https://todolist-token.herokuapp.com/")
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .client(client)
+                .build();
+
+        mService = retrofit.create(NoteApi.class);
+
 
     }
     public void gotoListPage(String token)
@@ -113,8 +151,85 @@ public class Login extends AppCompatActivity {
     }
     private void handleSignupButton()
     {
-        final ExecutorService service = Executors.newFixedThreadPool(10);
 
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                showclient.setText("Registering...");
+            }
+        });
+        final String name= nameET.getText().toString();
+        final String pass=pwET.getText().toString();
+        retrofit2.Call<String> call = mService.register(name,pass);
+
+        call.enqueue(new retrofit2.Callback<String>() {
+            @Override
+            public void onResponse(retrofit2.Call<String> call, retrofit2.Response<String> response) {
+                Log.d("APP", "SignupButton onResponse: "+response.code());
+                if(response.code()==406 && response.message().toString().equals("Not Acceptable")) {
+                    showclient.setText("\""+name+"\" has been registered.");
+
+                }
+                else
+                {
+                    handleLoginButton();
+                }
+            }
+
+            @Override
+            public void onFailure(retrofit2.Call<String> call, Throwable t) {
+                Log.d("APP", "SignupButton onFailure: ");
+            }
+        });
+    }
+    private void handleLoginButton()
+    {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                showclient.setText("Please wait...");
+            }
+        });
+        final String name= nameET.getText().toString();
+        final String pass=pwET.getText().toString();
+        retrofit2.Call<Token> call = mService.login(name,pass);
+
+        call.enqueue(new retrofit2.Callback<Token>() {
+            @Override
+            public void onResponse(retrofit2.Call<Token> call, retrofit2.Response<Token> response) {
+                Log.d("APP", "LoginButton onResponse: "+response.code());
+                //String resStr = response.body();
+                //Log.d("App", "LoginButton onResponse: ");
+                if (response.code()==406 && response.message().toString().equals("Not Acceptable"))
+                    showclient.setText("Username or Password is not correct!");
+                else {
+
+                    Token token =response.body();
+                    saveData(token.getToken());
+                    gotoListPage(token.getToken());
+
+                }
+                //showclient.setText(resStr+"\n"+token);
+//                if(resStr.trim().equals("Not Acceptable")) {
+//                    //handleLoginButton();
+//                    showclient.setText("Username or Password is not correct!");
+//                }
+//                else
+//                {
+//                    saveData(token);
+//                    gotoListPage(token);
+//                }
+            }
+
+            @Override
+            public void onFailure(retrofit2.Call<Token> call, Throwable t) {
+                Log.d("APP", "LoginButton onFailure: " + t.toString());
+            }
+        });
+    }
+    private void handleSignupButton_okhttp()
+    {
+        final ExecutorService service = Executors.newFixedThreadPool(10);
         OkHttpClient.Builder b = new OkHttpClient.Builder();
         b.readTimeout(1000*20, TimeUnit.MILLISECONDS);
         b.writeTimeout(600, TimeUnit.MILLISECONDS);
@@ -170,7 +285,7 @@ public class Login extends AppCompatActivity {
         service.shutdown();
 
     }
-    private void handleLoginButton()
+    private void handleLoginButton_okhttp()
     {
         final ExecutorService service = Executors.newFixedThreadPool(10);
 
@@ -207,8 +322,16 @@ public class Login extends AppCompatActivity {
 
                             final String token=resStr.substring(resStr.indexOf(':')+2,resStr.length()-2);
                             //showclient.setText(resStr+"\n"+token);
-                            saveData(token);
-                            gotoListPage(token);
+                            if(resStr.trim().equals("Not Acceptable")) {
+                                //handleLoginButton();
+                                showclient.setText("Username or Password is not correct!");
+                            }
+                            else
+                            {
+                                saveData(token);
+                                gotoListPage(token);
+                            }
+
                         }
                     });
 

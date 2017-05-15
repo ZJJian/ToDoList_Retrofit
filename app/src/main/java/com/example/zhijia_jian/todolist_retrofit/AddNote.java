@@ -11,6 +11,7 @@ import android.widget.Button;
 import android.widget.EditText;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import java.io.IOException;
 import java.text.DateFormat;
@@ -21,11 +22,15 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.FormBody;
+import okhttp3.Interceptor;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import retrofit2.Call;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class AddNote extends AppCompatActivity {
     private EditText editText;
@@ -34,6 +39,10 @@ public class AddNote extends AppCompatActivity {
     private String token;
     private Long noteId;
     private static final int EDIT=2;
+
+    private NoteApi mService;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,6 +62,38 @@ public class AddNote extends AppCompatActivity {
             addNoteButton.setText("Update");
         }
 
+
+        OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
+        httpClient.readTimeout(1000*30, TimeUnit.MILLISECONDS);
+        httpClient.writeTimeout(600, TimeUnit.MILLISECONDS);
+        httpClient.addInterceptor(new Interceptor() {
+            @Override
+            public Response intercept(Interceptor.Chain chain) throws IOException {
+                Request original = chain.request();
+
+                // Request customization: add request headers
+                Request.Builder requestBuilder = original.newBuilder()
+                        .header("x-access-token",token); // <-- this is the important line
+
+                Request request = requestBuilder.build();
+                return chain.proceed(request);
+            }
+        });
+        Log.d("APP","token " +token);
+
+        Gson gson = new GsonBuilder()
+                .setLenient()
+                .create();
+
+        OkHttpClient client = httpClient.build();
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("https://todolist-token.herokuapp.com/")
+                .addConverterFactory(GsonConverterFactory.create(gson))
+                .client(client)
+                .build();
+
+        mService = retrofit.create(NoteApi.class);
+
     }
     public void onAddButtonClick(View view) {
         if(noteId==-1)
@@ -61,14 +102,14 @@ public class AddNote extends AppCompatActivity {
             editNote();
 
 
-        Intent intent = new Intent();
-        //intent.setClass(AddNote.this , ToDoLists.class);
-        Bundle bun=new Bundle();
-        bun.putString("token",token);
-        intent.putExtras(bun);
-        //startActivityForResult(intent, EDIT);
-        setResult(RESULT_OK,intent);
-        finish();
+//        Intent intent = new Intent();
+//        //intent.setClass(AddNote.this , ToDoLists.class);
+//        Bundle bun=new Bundle();
+//        bun.putString("token",token);
+//        intent.putExtras(bun);
+//        //startActivityForResult(intent, EDIT);
+//        setResult(RESULT_OK,intent);
+//        finish();
     }
     private void editNote() {
         String noteText = editText.getText().toString();
@@ -85,65 +126,40 @@ public class AddNote extends AppCompatActivity {
         note.setDate(new Date());
         note.setText(textnoteText);
 
-        Gson gson = new Gson();
-        //將Book物件轉成JSON
-        String json = gson.toJson(note);
-        new MyTask().execute(json);
+//        Gson gson = new Gson();
+//        //將Book物件轉成JSON
+//        String json = gson.toJson(note);
+        UpdateNote(note);
+        //new MyTask().execute(json);
 
     }
+    private void UpdateNote(Note note)
+    {
+        Call<String> call = mService.update(noteId,note);
 
-    class MyTask extends AsyncTask<String, String, String> {
-        protected void onPreExecute(){
-            // in main thread
-        }
-
-        protected String doInBackground(String... params){
-            // in background thread
-            //final ExecutorService service = Executors.newFixedThreadPool(10);
-            //String getJson;
-            final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
-            OkHttpClient.Builder b = new OkHttpClient.Builder();
-            b.readTimeout(1000*30, TimeUnit.MILLISECONDS);
-            b.writeTimeout(600, TimeUnit.MILLISECONDS);
-
-            final OkHttpClient client = b.build();
-            RequestBody formBody = RequestBody.create(JSON, params[0]);
-            Request request = new Request.Builder()
-                    .url("https://todolist-token.herokuapp.com/list/"+noteId.toString())
-                    .header("x-access-token",token)
-                    .put(formBody)//
-                    .build();
-            try {
+        call.enqueue(new retrofit2.Callback<String>() {
+            @Override
+            public void onResponse(Call<String> call, retrofit2.Response<String> response) {
+                Log.d("APP", "UpdateNoteonResponse: "+response.body().toString());
+                Intent intent = new Intent();
+                //intent.setClass(AddNote.this , ToDoLists.class);
+                Bundle bun=new Bundle();
+                bun.putString("token",token);
+                intent.putExtras(bun);
+                //startActivityForResult(intent, EDIT);
+                setResult(RESULT_OK,intent);
+                finish();
 
 
-                Log.d("app", "run: execute");
-                final Response response = client.newCall(request).execute();
-                final String resStr = response.body().string();
-                Log.d("app", "run: resStr: " + resStr);
-                return resStr;
-
-            } catch (IOException e) {
-                e.printStackTrace();
-                return "";
             }
-        }
 
-        protected void onProgressUpdate(String... progress){
-            // in main thread
-        }
-
-        protected void onPostExecute(String result){
-            // in main thread
-            //showList();
-
-        }
-
-        protected void onCancelled(String result){
-            // in main thread
-
-        }
-
+            @Override
+            public void onFailure(Call<String> call, Throwable t) {
+                Log.d("APP", "UpdateNoteonFailure: ");
+            }
+        });
     }
+
 
     private void addNote() {
         String noteText = editText.getText().toString();
@@ -160,15 +176,44 @@ public class AddNote extends AppCompatActivity {
         note.setDate(new Date());
         note.setText(textnoteText);
 
-        Gson gson = new Gson();
-        //將Book物件轉成JSON
-        String json = gson.toJson(note);
-        Log.d("app",json);
 
-        noteToServere(json,token);
+        Gson gson = new Gson();
+//        //將Book物件轉成JSON
+        String json = gson.toJson(note);
+//        Log.d("app",json);
+//
+//        noteToServere(json,token);
+        AddOneNote(note);
         //noteDao.insert(note);
         //Log.d("DaoExample", "Inserted new note, ID: " + note.getId());
 
+    }
+    private void AddOneNote(Note note)
+    {
+        Call<String> call = mService.post(note);
+
+        call.enqueue(new retrofit2.Callback<String>() {
+            @Override
+            public void onResponse(Call<String> call, retrofit2.Response<String> response) {
+                Log.d("APP", "AddOneNoteResponse: "+response.body().toString());
+
+                Intent intent = new Intent();
+                //intent.setClass(AddNote.this , ToDoLists.class);
+                Bundle bun=new Bundle();
+                bun.putString("token",token);
+                intent.putExtras(bun);
+                //startActivityForResult(intent, EDIT);
+                setResult(RESULT_OK,intent);
+                finish();
+
+
+            }
+
+            @Override
+            public void onFailure(Call<String> call, Throwable t) {
+                Log.d("APP", "AddOneNoteFailure: ");
+            }
+        });
     }
     private void noteToServere(final String json, final String token)
     {
