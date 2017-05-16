@@ -96,41 +96,21 @@ public class AddNote extends AppCompatActivity {
 
     }
     public void onAddButtonClick(View view) {
-        if(noteId==-1)
-            addNote();
-        else
-            editNote();
-
-
-//        Intent intent = new Intent();
-//        //intent.setClass(AddNote.this , ToDoLists.class);
-//        Bundle bun=new Bundle();
-//        bun.putString("token",token);
-//        intent.putExtras(bun);
-//        //startActivityForResult(intent, EDIT);
-//        setResult(RESULT_OK,intent);
-//        finish();
-    }
-    private void editNote() {
         String noteText = editText.getText().toString();
-        //editText.setText("");
         String textnoteText = texteditText.getText().toString();
-        //texteditText.setText("");
-
 
         Note note = new Note();
         note.setTitle(noteText);
         final DateFormat df = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM);
-        String comment = "Edited on " + df.format(new Date());
+        String comment =(noteId==-1)?"Added on " + df.format(new Date()) : "Edited on " + df.format(new Date());
         note.setComment(comment);
         note.setDate(new Date());
         note.setText(textnoteText);
 
-//        Gson gson = new Gson();
-//        //將Book物件轉成JSON
-//        String json = gson.toJson(note);
-        UpdateNote(note);
-        //new MyTask().execute(json);
+        if(noteId==-1)
+            AddOneNote(note);
+        else
+            UpdateNote(note);
 
     }
     private void UpdateNote(Note note)
@@ -142,11 +122,9 @@ public class AddNote extends AppCompatActivity {
             public void onResponse(Call<String> call, retrofit2.Response<String> response) {
                 Log.d("APP", "UpdateNoteonResponse: "+response.body().toString());
                 Intent intent = new Intent();
-                //intent.setClass(AddNote.this , ToDoLists.class);
                 Bundle bun=new Bundle();
                 bun.putString("token",token);
                 intent.putExtras(bun);
-                //startActivityForResult(intent, EDIT);
                 setResult(RESULT_OK,intent);
                 finish();
 
@@ -159,35 +137,6 @@ public class AddNote extends AppCompatActivity {
             }
         });
     }
-
-
-    private void addNote() {
-        String noteText = editText.getText().toString();
-        //editText.setText("");
-        String textnoteText = texteditText.getText().toString();
-        //texteditText.setText("");
-
-        final DateFormat df = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM);
-        String comment = "Added on " + df.format(new Date());
-
-        Note note = new Note();
-        note.setTitle(noteText);
-        note.setComment(comment);
-        note.setDate(new Date());
-        note.setText(textnoteText);
-
-
-        Gson gson = new Gson();
-//        //將Book物件轉成JSON
-        String json = gson.toJson(note);
-//        Log.d("app",json);
-//
-//        noteToServere(json,token);
-        AddOneNote(note);
-        //noteDao.insert(note);
-        //Log.d("DaoExample", "Inserted new note, ID: " + note.getId());
-
-    }
     private void AddOneNote(Note note)
     {
         Call<String> call = mService.post(note);
@@ -198,11 +147,9 @@ public class AddNote extends AppCompatActivity {
                 Log.d("APP", "AddOneNoteResponse: "+response.body().toString());
 
                 Intent intent = new Intent();
-                //intent.setClass(AddNote.this , ToDoLists.class);
                 Bundle bun=new Bundle();
                 bun.putString("token",token);
                 intent.putExtras(bun);
-                //startActivityForResult(intent, EDIT);
                 setResult(RESULT_OK,intent);
                 finish();
 
@@ -214,55 +161,6 @@ public class AddNote extends AppCompatActivity {
                 Log.d("APP", "AddOneNoteFailure: ");
             }
         });
-    }
-    private void noteToServere(final String json, final String token)
-    {
-        final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
-        final ExecutorService service = Executors.newFixedThreadPool(10);
-
-        OkHttpClient.Builder b = new OkHttpClient.Builder();
-        b.readTimeout(1000*30, TimeUnit.MILLISECONDS);
-        b.writeTimeout(600, TimeUnit.MILLISECONDS);
-
-        final OkHttpClient client = b.build();
-        //final String name= nameET.getText().toString();
-        //final String pass=pwET.getText().toString();
-        service.execute(new Runnable() {
-            @Override
-            public void run() {
-                RequestBody formBody = RequestBody.create(JSON, json);
-                Request request = new Request.Builder()
-                        .url("https://todolist-token.herokuapp.com/list")
-                        .header("x-access-token",token)
-                        .post(formBody)//
-                        .build();
-                try {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            //showclient.setText("註冊中...");
-                        }
-                    });
-
-                    Log.d("app", "run: execute");
-                    final Response response = client.newCall(request).execute();
-                    final String resStr = response.body().string();
-                    Log.d("app", "run: resStr: " + resStr);
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Log.d("app", "run: execute done");
-
-                            //showclient.setText(resStr);
-                        }
-                    });
-
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-        service.shutdown();
     }
 }
 

@@ -69,7 +69,7 @@ public class ToDoLists extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_to_do_lists);
-        //Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+
 
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(mToolbar);
@@ -80,7 +80,7 @@ public class ToDoLists extends AppCompatActivity {
         setUpViews();
         Bundle bun = this.getIntent().getExtras();
         token=bun.getString("token");
-        //updateNotes();
+
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -102,7 +102,7 @@ public class ToDoLists extends AppCompatActivity {
                 switch (item.getItemId()){
                     case R.id.menu_edit:
                         handelLogOut();
-                        //Toast.makeText( "Edit is clicked!", Toast.LENGTH_SHORT).show();
+
                         break;
                 }
                 return false;
@@ -153,11 +153,6 @@ public class ToDoLists extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-/*
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.menu_layout, menu);
-        return true;
-*/
 
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu_layout, menu);
@@ -181,27 +176,7 @@ public class ToDoLists extends AppCompatActivity {
 
 
     }
-    private void updateNotes() {
-        //while(getJson==null)
-        //getNotesFromServer();
 
-
-
-        GetNoteList();
-        //new MyTask().execute(" ");
-//        AsyncTask task = new MyTask();
-//        task.execute(" ");
-//        task.cancel(true);
-
-    }
-    private  void showList()
-    {
-//        Gson gson = new Gson();
-//        Type listType = new TypeToken<ArrayList<Note>>(){}.getType();
-//        notes = gson.fromJson(getJson,listType);
-        notesAdapter.setNotes(notes);
-
-    }
     protected void setUpViews() {
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recyclerViewNotes);
         //noinspection ConstantConditions
@@ -212,7 +187,7 @@ public class ToDoLists extends AppCompatActivity {
         recyclerView.setAdapter(notesAdapter);
 
     }
-    private void GetNoteList()
+    private void updateNotes()
     {
         Call<List<Note>> call = mService.getNoteList();
 
@@ -221,8 +196,7 @@ public class ToDoLists extends AppCompatActivity {
             public void onResponse(Call<List<Note>> call, retrofit2.Response<List<Note>> response) {
                 Log.d(TAG, "onResponse: ");
                 notes = response.body();
-                showList();
-
+                notesAdapter.setNotes(notes);
             }
 
             @Override
@@ -240,7 +214,6 @@ public class ToDoLists extends AppCompatActivity {
             @Override
             public void onResponse(Call<String> call, retrofit2.Response<String> response) {
                 Log.d(TAG, "DeleteNoteonResponse: "+response.body().toString());
-                //showList();
 
             }
 
@@ -265,32 +238,25 @@ public class ToDoLists extends AppCompatActivity {
 
         final Long noteId = note.getId();
 
-//        //產生一個Builder物件
+
         AlertDialog.Builder builder = new AlertDialog.Builder(ToDoLists.this);
-//        //設定Dialog的標題
         builder.setTitle(note.getTitle());
-//        //設定Dialog的內容
         builder.setMessage(note.getText());
-        //設定Positive按鈕資料
+        //set "delete" button
         builder.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                //按下按鈕時顯示快顯
 
-                //noteDao.deleteByKey(noteId);
                 notes.remove(getIndex(noteId,notes));
                 notesAdapter.setNotes(notes);
                 DeleteNote(noteId);
 
-                //new DeleteTask().execute(noteId.toString());
-                Log.d("DaoExample", "Deleted note, ID: " + noteId);
+                Log.d("APP", "Deleted note, ID: " + noteId);
 
-
-                //updateNotes();
                 Toast.makeText(ToDoLists.this, "You clicked \"delete\"", Toast.LENGTH_SHORT).show();
             }
         });
-        //設定Negative按鈕資料
+        //set "edit" button
         builder.setNegativeButton("Edit", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
@@ -304,11 +270,11 @@ public class ToDoLists extends AppCompatActivity {
                 bun.putString("title",note.getTitle());
                 intent.putExtras(bun);
                 startActivity(intent);
-                //按下按鈕時顯示快顯
+
                 Toast.makeText(ToDoLists.this, "You clicked \"Edit\"", Toast.LENGTH_SHORT).show();
             }
         });
-        //利用Builder物件建立AlertDialog
+
         return builder.create();
     }
     public int getIndex(Long noteId,List<Note> notes)
@@ -321,7 +287,6 @@ public class ToDoLists extends AppCompatActivity {
                 return i;
             }
         }
-
         return -1;
     }
 

@@ -199,10 +199,8 @@ public class Login extends AppCompatActivity {
                 Log.d("APP", "SignupButton onResponse: "+response.code());
                 if(response.code()==406 && response.message().toString().equals("Not Acceptable")) {
                     showclient.setText("\""+name+"\" has been registered.");
-
                 }
-                else
-                {
+                else {
                     handleLoginButton();
                 }
             }
@@ -229,8 +227,7 @@ public class Login extends AppCompatActivity {
             @Override
             public void onResponse(retrofit2.Call<Token> call, retrofit2.Response<Token> response) {
                 Log.d("APP", "LoginButton onResponse: "+response.code());
-                //String resStr = response.body();
-                //Log.d("App", "LoginButton onResponse: ");
+
                 if (response.code()==406 && response.message().toString().equals("Not Acceptable"))
                     showclient.setText("Username or Password is not correct!");
                 else {
@@ -240,16 +237,6 @@ public class Login extends AppCompatActivity {
                     gotoListPage(token.getToken());
 
                 }
-                //showclient.setText(resStr+"\n"+token);
-//                if(resStr.trim().equals("Not Acceptable")) {
-//                    //handleLoginButton();
-//                    showclient.setText("Username or Password is not correct!");
-//                }
-//                else
-//                {
-//                    saveData(token);
-//                    gotoListPage(token);
-//                }
             }
 
             @Override
@@ -257,38 +244,6 @@ public class Login extends AppCompatActivity {
                 Log.d("APP", "LoginButton onFailure: " + t.toString());
             }
         });
-    }
-    private class CustomTextClick extends ClickableSpan {
-        private String mUrl;
-
-        CustomTextClick(String url) {
-            mUrl = url;
-        }
-
-        @Override
-        public void onClick(View widget) {
-
-            if (mUrl.equals("1")) {
-                Toast.makeText(Login.this, "Forgot Password", Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
-    private void setTextHyperLinkListener(TextView textView, Spanned sp) {
-        CharSequence text = textView.getText();
-        if (text instanceof Spannable) {
-            int end = text.length();
-            URLSpan[] urls = sp.getSpans(0, end, URLSpan.class);
-            SpannableStringBuilder style = new SpannableStringBuilder(text);
-            style.clearSpans();
-
-            for (URLSpan url : urls) {
-                CustomTextClick click = new CustomTextClick(url.getURL());
-                style.setSpan(click, sp.getSpanStart(url), sp.getSpanEnd(url),
-                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-            }
-
-            textView.setText(style);
-        }
     }
 
 
