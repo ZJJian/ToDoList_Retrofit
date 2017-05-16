@@ -76,7 +76,7 @@ public class ToDoLists extends AppCompatActivity {
 
 
         settings = getSharedPreferences(data,0);
-
+        mToolbar.setTitle(settings.getString(usernameField,"")+"'s ToDoList");
         setUpViews();
         Bundle bun = this.getIntent().getExtras();
         token=bun.getString("token");

@@ -53,13 +53,27 @@
         android:hint="Password"
         android:inputType="textPassword" />
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:textSize="15dp"
+        android:text="@string/forgot"
+        android:layout_below="@+id/passwordET"
+        android:layout_alignRight="@id/passwordET"
+        android:autoLink="all"
+        android:layout_marginTop="10dp"
+        android:id="@+id/forgotPassword"
+        android:clickable="true"
+        android:onClick="onClick"/>
+
     <Button
         android:id="@+id/loginButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignLeft="@+id/tv2"
         android:layout_alignStart="@+id/tv2"
-        android:layout_below="@+id/passwordET"
+        android:layout_below="@+id/forgotPassword"
         android:layout_marginLeft="14dp"
         android:layout_marginStart="14dp"
         android:layout_marginTop="10dp"

@@ -3,11 +3,22 @@ package com.example.zhijia_jian.todolist_retrofit;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.Typeface;
+import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.util.SortedList;
+import android.text.Html;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.method.LinkMovementMethod;
+import android.text.style.ClickableSpan;
+import android.text.style.URLSpan;
+import android.text.util.Linkify;
 import android.util.Log;
 import android.view.Menu;
 import android.view.View;
@@ -34,6 +45,8 @@ import okhttp3.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
+import static com.example.zhijia_jian.todolist_retrofit.R.color.White;
+
 
 public class Login extends AppCompatActivity {
 
@@ -43,6 +56,7 @@ public class Login extends AppCompatActivity {
     private EditText pwET;
     private TextView showclient;
     private TextView mainTitle;
+    private TextView forgotTV;
     private SharedPreferences settings;
     private static final String data = "DATA";
     private static final String usernameField = "USERNAME";
@@ -60,6 +74,23 @@ public class Login extends AppCompatActivity {
         pwET=(EditText) findViewById(R.id.passwordET);
         lButton=(Button)findViewById(R.id.loginButton);
         sButton=(Button)findViewById(R.id.signupButton);
+
+        forgotTV=(TextView) findViewById(R.id.forgotPassword);
+
+
+
+        forgotTV.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(Login.this, "Forgot Password", Toast.LENGTH_SHORT).show();
+                //forgotTV.setTextColor(Color.BLACK);
+
+                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.google.com"));
+                startActivity(intent);
+
+            }
+        });
+
 
         mainTitle =(TextView) findViewById(R.id.tv2);
         mainTitle.setTypeface(Typeface.createFromAsset(getAssets()
@@ -227,121 +258,39 @@ public class Login extends AppCompatActivity {
             }
         });
     }
-    private void handleSignupButton_okhttp()
-    {
-        final ExecutorService service = Executors.newFixedThreadPool(10);
-        OkHttpClient.Builder b = new OkHttpClient.Builder();
-        b.readTimeout(1000*20, TimeUnit.MILLISECONDS);
-        b.writeTimeout(600, TimeUnit.MILLISECONDS);
+    private class CustomTextClick extends ClickableSpan {
+        private String mUrl;
 
-        final OkHttpClient client = b.build();
-        final String name= nameET.getText().toString();
-        final String pass=pwET.getText().toString();
-        service.execute(new Runnable() {
-            @Override
-            public void run() {
-                RequestBody formBody = new FormBody.Builder()
-                        .add("username", name)
-                        .add("password", pass)
-                        .build();
-                Request request = new Request.Builder()
-                        .url("https://todolist-token.herokuapp.com/user/register")
-                        .post(formBody)
-                        .build();
-                try {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            showclient.setText("Registering...");
-                        }
-                    });
+        CustomTextClick(String url) {
+            mUrl = url;
+        }
 
-                    Log.d("app", "run: execute");
-                    final Response response = client.newCall(request).execute();
-                    final String resStr = response.body().string();
-                    Log.d("app", "run: resStr: " + resStr);
-                    //showclient.setText(resStr);
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Log.d("app", "run: execute done");
-                            Toast.makeText(Login.this, resStr, Toast.LENGTH_SHORT).show();
-                            //showclient.setText(resStr);
-                            if(resStr.trim().equals("OK")) {
-                                handleLoginButton();
-                            }
-                            else
-                            {
-                                showclient.setText("\""+name+"\" has been registered.");
-                            }
-                        }
-                    });
+        @Override
+        public void onClick(View widget) {
 
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+            if (mUrl.equals("1")) {
+                Toast.makeText(Login.this, "Forgot Password", Toast.LENGTH_SHORT).show();
             }
-        });
-        service.shutdown();
-
+        }
     }
-    private void handleLoginButton_okhttp()
-    {
-        final ExecutorService service = Executors.newFixedThreadPool(10);
+    private void setTextHyperLinkListener(TextView textView, Spanned sp) {
+        CharSequence text = textView.getText();
+        if (text instanceof Spannable) {
+            int end = text.length();
+            URLSpan[] urls = sp.getSpans(0, end, URLSpan.class);
+            SpannableStringBuilder style = new SpannableStringBuilder(text);
+            style.clearSpans();
 
-        OkHttpClient.Builder b = new OkHttpClient.Builder();
-        b.readTimeout(1000*20, TimeUnit.MILLISECONDS);
-        b.writeTimeout(600, TimeUnit.MILLISECONDS);
-
-        final OkHttpClient client = b.build();
-        final String name= nameET.getText().toString();
-        final String pass=pwET.getText().toString();
-        service.execute(new Runnable() {
-            @Override
-            public void run() {
-                RequestBody formBody = new FormBody.Builder()
-                        .add("username", name)
-                        .add("password", pass)
-                        .build();
-                Request request = new Request.Builder()
-                        .url("https://todolist-token.herokuapp.com/user/login")
-                        .post(formBody)
-                        .build();
-                try {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            showclient.setText("Please wait...");
-                        }
-                    });
-                    final Response response = client.newCall(request).execute();
-                    final String resStr = response.body().string();
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-
-                            final String token=resStr.substring(resStr.indexOf(':')+2,resStr.length()-2);
-                            //showclient.setText(resStr+"\n"+token);
-                            if(resStr.trim().equals("Not Acceptable")) {
-                                //handleLoginButton();
-                                showclient.setText("Username or Password is not correct!");
-                            }
-                            else
-                            {
-                                saveData(token);
-                                gotoListPage(token);
-                            }
-
-                        }
-                    });
-
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+            for (URLSpan url : urls) {
+                CustomTextClick click = new CustomTextClick(url.getURL());
+                style.setSpan(click, sp.getSpanStart(url), sp.getSpanEnd(url),
+                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
             }
-        });
-        service.shutdown();
+
+            textView.setText(style);
+        }
     }
+
 
 
 }

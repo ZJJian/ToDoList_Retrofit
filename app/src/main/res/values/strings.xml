@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">ToDoList</string>
     <string name="title_activity_to_do_lists">ToDoLists</string>
+    <string name="forgot"><a href="www.google.com">Forgot Password</a></string>
 </resources>
