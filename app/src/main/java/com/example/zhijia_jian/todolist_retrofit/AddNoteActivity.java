@@ -32,15 +32,12 @@ import retrofit2.Call;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class AddNote extends AppCompatActivity {
+public class AddNoteActivity extends AppCompatActivity {
     private EditText editText;
     private EditText texteditText;
     private Button addNoteButton;
     private String token;
     private Long noteId;
-    private static final int EDIT=2;
-
-    private NoteApi mService;
 
 
     @Override
@@ -61,38 +58,6 @@ public class AddNote extends AppCompatActivity {
             texteditText.setText(bun.getString("content"));
             addNoteButton.setText("Update");
         }
-
-
-        OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
-        httpClient.readTimeout(1000*30, TimeUnit.MILLISECONDS);
-        httpClient.writeTimeout(600, TimeUnit.MILLISECONDS);
-        httpClient.addInterceptor(new Interceptor() {
-            @Override
-            public Response intercept(Interceptor.Chain chain) throws IOException {
-                Request original = chain.request();
-
-                // Request customization: add request headers
-                Request.Builder requestBuilder = original.newBuilder()
-                        .header("x-access-token",token); // <-- this is the important line
-
-                Request request = requestBuilder.build();
-                return chain.proceed(request);
-            }
-        });
-        Log.d("APP","token " +token);
-
-        Gson gson = new GsonBuilder()
-                .setLenient()
-                .create();
-
-        OkHttpClient client = httpClient.build();
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://todolist-token.herokuapp.com/")
-                .addConverterFactory(GsonConverterFactory.create(gson))
-                .client(client)
-                .build();
-
-        mService = retrofit.create(NoteApi.class);
 
     }
     public void onAddButtonClick(View view) {
@@ -115,7 +80,8 @@ public class AddNote extends AppCompatActivity {
     }
     private void UpdateNote(Note note)
     {
-        Call<String> call = mService.update(noteId,note);
+        NoteClient myClient=NoteClient.getNoteService(token);
+        Call<String> call = myClient.Update(noteId,note);
 
         call.enqueue(new retrofit2.Callback<String>() {
             @Override
@@ -139,7 +105,8 @@ public class AddNote extends AppCompatActivity {
     }
     private void AddOneNote(Note note)
     {
-        Call<String> call = mService.post(note);
+        NoteClient myClient=NoteClient.getNoteService(token);
+        Call<String> call = myClient.Post(note);
 
         call.enqueue(new retrofit2.Callback<String>() {
             @Override

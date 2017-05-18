@@ -2,25 +2,11 @@ package com.example.zhijia_jian.todolist_retrofit;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.graphics.Typeface;
 import android.net.Uri;
-import android.os.AsyncTask;
-import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.util.SortedList;
-import android.text.Html;
-import android.text.Spannable;
-import android.text.SpannableStringBuilder;
-import android.text.Spanned;
-import android.text.method.LinkMovementMethod;
-import android.text.style.ClickableSpan;
-import android.text.style.URLSpan;
-import android.text.util.Linkify;
 import android.util.Log;
-import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -31,24 +17,17 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import java.io.IOException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import okhttp3.Call;
-import okhttp3.FormBody;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import okhttp3.RequestBody;
 import okhttp3.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-import static com.example.zhijia_jian.todolist_retrofit.R.color.White;
 
-
-public class Login extends AppCompatActivity {
+public class LoginActivity extends AppCompatActivity {
 
     private Button sButton;
     private Button lButton;
@@ -63,7 +42,9 @@ public class Login extends AppCompatActivity {
     private static final String passwordField = "PASSWORD";
     private static final String tokenField = "TOKEN";
 
-    private NoteApi mService;
+
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,7 +55,6 @@ public class Login extends AppCompatActivity {
         pwET=(EditText) findViewById(R.id.passwordET);
         lButton=(Button)findViewById(R.id.loginButton);
         sButton=(Button)findViewById(R.id.signupButton);
-
         forgotTV=(TextView) findViewById(R.id.forgotPassword);
 
 
@@ -82,7 +62,7 @@ public class Login extends AppCompatActivity {
         forgotTV.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(Login.this, "Forgot Password", Toast.LENGTH_SHORT).show();
+                Toast.makeText(LoginActivity.this, "Forgot Password", Toast.LENGTH_SHORT).show();
                 //forgotTV.setTextColor(Color.BLACK);
 
                 Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.google.com"));
@@ -120,57 +100,24 @@ public class Login extends AppCompatActivity {
         }
 
 
-        OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
-        httpClient.readTimeout(1000*30, TimeUnit.MILLISECONDS);
-        httpClient.writeTimeout(600, TimeUnit.MILLISECONDS);
-        httpClient.addInterceptor(new Interceptor() {
-            @Override
-            public Response intercept(Interceptor.Chain chain) throws IOException {
-                Request original = chain.request();
-
-                // Request customization: add request headers
-                Request.Builder requestBuilder = original.newBuilder();
-                //        .header("x-access-token",token); // <-- this is the important line
-
-                Request request = requestBuilder.build();
-                return chain.proceed(request);
-            }
-        });
-        Log.d("APP","token " +token);
-
-        Gson gson = new GsonBuilder()
-                .setLenient()
-                .create();
-
-        OkHttpClient client = httpClient.build();
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://todolist-token.herokuapp.com/")
-                .addConverterFactory(GsonConverterFactory.create(gson))
-                .client(client)
-                .build();
-
-        mService = retrofit.create(NoteApi.class);
-
 
     }
     public void gotoListPage(String token)
     {
         Intent intent = new Intent();
-        intent.setClass(Login.this , ToDoLists.class);
+        intent.setClass(LoginActivity.this , ToDoListsActivity.class);
         Bundle bun=new Bundle();
         bun.putString("token",token);
         intent.putExtras(bun);
         startActivity(intent);
         settings = getSharedPreferences(data,0);
         showclient.setText("");
-        Toast.makeText(Login.this, "Welcome "+ settings.getString(usernameField,""), Toast.LENGTH_SHORT).show();
+        Toast.makeText(LoginActivity.this, "Welcome "+ settings.getString(usernameField,""), Toast.LENGTH_SHORT).show();
     }
     public String readData(){
         settings = getSharedPreferences(data,0);
         return settings.getString(tokenField,"");
-//        name.setText(settings.getString(nameField, ""));
-//        phone.setText(settings.getString(phoneField, ""));
-//        sex.setText(settings.getString(sexField, ""));
+
     }
     public void saveData(String token){
         settings = getSharedPreferences(data,0);
@@ -191,7 +138,8 @@ public class Login extends AppCompatActivity {
         });
         final String name= nameET.getText().toString();
         final String pass=pwET.getText().toString();
-        retrofit2.Call<String> call = mService.register(name,pass);
+        NoteClient myClient=NoteClient.getUserService();
+        retrofit2.Call<String> call = myClient.Register(name,pass);
 
         call.enqueue(new retrofit2.Callback<String>() {
             @Override
@@ -221,7 +169,14 @@ public class Login extends AppCompatActivity {
         });
         final String name= nameET.getText().toString();
         final String pass=pwET.getText().toString();
-        retrofit2.Call<Token> call = mService.login(name,pass);
+        NoteClient myClient=NoteClient.getUserService();
+        retrofit2.Call<Token> call = myClient.Login(name,pass);
+//        try {
+//             retrofit2.Response<Token> response = call.execute();
+//             Token t = response.body();
+//        } catch (Exception ex) {
+//
+//        }
 
         call.enqueue(new retrofit2.Callback<Token>() {
             @Override

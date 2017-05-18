@@ -15,13 +15,13 @@ import retrofit2.http.Path;
 
 public interface NoteApi {
 
-    //Login
+    //LoginActivity
     @POST("/user/login")
     @FormUrlEncoded
     Call<Token> login(@Field("username") String username,@Field("password") String password);
 
 
-    //Login
+    //registerActivity
     @POST("/user/register")
     @FormUrlEncoded
     Call<String> register(@Field("username") String username,@Field("password") String password);

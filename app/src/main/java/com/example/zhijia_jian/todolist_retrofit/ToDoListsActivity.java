@@ -3,8 +3,6 @@ package com.example.zhijia_jian.todolist_retrofit;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Typeface;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -19,42 +17,15 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
-
-import java.io.IOException;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-
-import okhttp3.Interceptor;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-import okhttp3.Callback;
-//import okhttp3.Call;
-import retrofit2.converter.gson.GsonConverterFactory;
-import retrofit2.http.GET;
-import retrofit2.http.Path;
 import retrofit2.Call;
-//import retrofit2.Response;
-//import retrofit2.Callback;
-import retrofit2.Retrofit;
-import retrofit2.converter.scalars.ScalarsConverterFactory;
 
-public class ToDoLists extends AppCompatActivity {
+
+public class ToDoListsActivity extends AppCompatActivity {
     public static final String TAG = "app";
     private NotesAdapter notesAdapter;
     private List<Note> notes;
     private String token;
-    String getJson;
     private Toolbar mToolbar;
     private SharedPreferences settings;
     private static final String data = "DATA";
@@ -62,8 +33,6 @@ public class ToDoLists extends AppCompatActivity {
     private static final String passwordField = "PASSWORD";
     private static final String tokenField = "TOKEN";
     private static final int EDIT=1;
-
-    private NoteApi mService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,7 +57,7 @@ public class ToDoLists extends AppCompatActivity {
                 Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
                 Intent intent = new Intent();
-                intent.setClass(ToDoLists.this , AddNote.class);
+                intent.setClass(ToDoListsActivity.this , AddNoteActivity.class);
                 Bundle bun=new Bundle();
                 bun.putString("token",token);
                 bun.putLong("noteId",-1);
@@ -110,36 +79,6 @@ public class ToDoLists extends AppCompatActivity {
         });
 
 
-        OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
-        httpClient.readTimeout(1000*30, TimeUnit.MILLISECONDS);
-        httpClient.writeTimeout(600, TimeUnit.MILLISECONDS);
-        httpClient.addInterceptor(new Interceptor() {
-            @Override
-            public Response intercept(Interceptor.Chain chain) throws IOException {
-                Request original = chain.request();
-
-                // Request customization: add request headers
-                Request.Builder requestBuilder = original.newBuilder()
-                        .header("x-access-token",token); // <-- this is the important line
-
-                Request request = requestBuilder.build();
-                return chain.proceed(request);
-            }
-        });
-        Log.d("APP","token " +token);
-
-        Gson gson = new GsonBuilder()
-        .setLenient()
-        .create();
-
-        OkHttpClient client = httpClient.build();
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://todolist-token.herokuapp.com/")
-                .addConverterFactory(GsonConverterFactory.create(gson))
-                .client(client)
-                .build();
-
-        mService = retrofit.create(NoteApi.class);
     }
 
     @Override
@@ -156,12 +95,12 @@ public class ToDoLists extends AppCompatActivity {
 
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu_layout, menu);
-        //MenuItem refresh = menu.getItem(R.id.menu_edit);
-        //refresh.setEnabled(true);
         return true;
-        //return super.onCreateOptionsMenu(menu);
+
     }
     private void handelLogOut() {
+        NoteClient myClient=NoteClient.getNoteService(token);
+        myClient.release();
         String s=settings.getString(tokenField,"");
         Log.d("App before clear", s);
         settings.edit().remove(usernameField).commit();
@@ -171,9 +110,8 @@ public class ToDoLists extends AppCompatActivity {
         Log.d("App after clear", s);
 
         Intent intent = new Intent();
-        intent.setClass(ToDoLists.this , Login.class);
+        intent.setClass(ToDoListsActivity.this , LoginActivity.class);
         startActivityForResult(intent, EDIT);
-
 
     }
 
@@ -189,7 +127,8 @@ public class ToDoLists extends AppCompatActivity {
     }
     private void updateNotes()
     {
-        Call<List<Note>> call = mService.getNoteList();
+        NoteClient myClient=NoteClient.getNoteService(token);
+        Call<List<Note>> call = myClient.GetNoteList();
 
         call.enqueue(new retrofit2.Callback<List<Note>>() {
             @Override
@@ -208,7 +147,8 @@ public class ToDoLists extends AppCompatActivity {
     private void DeleteNote(Long noteId)
     {
         Log.d(TAG, "DeleteNote: ");
-        Call<String> call = mService.delete(noteId);
+        NoteClient myClient=NoteClient.getNoteService(token);
+        Call<String> call = myClient.Delete(noteId);
 
         call.enqueue(new retrofit2.Callback<String>() {
             @Override
@@ -239,7 +179,7 @@ public class ToDoLists extends AppCompatActivity {
         final Long noteId = note.getId();
 
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(ToDoLists.this);
+        AlertDialog.Builder builder = new AlertDialog.Builder(ToDoListsActivity.this);
         builder.setTitle(note.getTitle());
         builder.setMessage(note.getText());
         //set "delete" button
@@ -253,7 +193,7 @@ public class ToDoLists extends AppCompatActivity {
 
                 Log.d("APP", "Deleted note, ID: " + noteId);
 
-                Toast.makeText(ToDoLists.this, "You clicked \"delete\"", Toast.LENGTH_SHORT).show();
+                Toast.makeText(ToDoListsActivity.this, "You clicked \"delete\"", Toast.LENGTH_SHORT).show();
             }
         });
         //set "edit" button
@@ -262,7 +202,7 @@ public class ToDoLists extends AppCompatActivity {
             public void onClick(DialogInterface dialog, int which) {
 
                 Intent intent = new Intent();
-                intent.setClass(ToDoLists.this , AddNote.class);
+                intent.setClass(ToDoListsActivity.this , AddNoteActivity.class);
                 Bundle bun=new Bundle();
                 bun.putLong("noteId",noteId);
                 bun.putString("token",token);
@@ -271,7 +211,7 @@ public class ToDoLists extends AppCompatActivity {
                 intent.putExtras(bun);
                 startActivity(intent);
 
-                Toast.makeText(ToDoLists.this, "You clicked \"Edit\"", Toast.LENGTH_SHORT).show();
+                Toast.makeText(ToDoListsActivity.this, "You clicked \"Edit\"", Toast.LENGTH_SHORT).show();
             }
         });
 

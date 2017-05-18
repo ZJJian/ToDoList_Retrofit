@@ -11,7 +11,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".Login">
+        <activity android:name=".LoginActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -19,10 +19,10 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ToDoLists"
+            android:name=".ToDoListsActivity"
             android:label="@string/title_activity_to_do_lists"
             android:theme="@style/AppTheme.NoActionBar" />
-        <activity android:name=".AddNote"></activity>
+        <activity android:name=".AddNoteActivity"></activity>
     </application>
 
 </manifest>

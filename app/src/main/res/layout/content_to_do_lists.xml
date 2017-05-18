@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:context="com.example.zhijia_jian.todolist_retrofit.ToDoLists"
+    tools:context="com.example.zhijia_jian.todolist_retrofit.ToDoListsActivity"
     tools:showIn="@layout/activity_to_do_lists">
     <android.support.v7.widget.RecyclerView
         android:id="@+id/recyclerViewNotes"
