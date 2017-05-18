@@ -1,6 +1,8 @@
 package com.example.zhijia_jian.todolist_retrofit;
 
-import android.graphics.Bitmap;
+
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -8,6 +10,10 @@ import com.google.gson.GsonBuilder;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Interceptor;
@@ -20,30 +26,46 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class NoteClient {
 
-    private static NoteClient userService = null;
-    private static NoteClient noteService = null;
+    private static NoteClient instance = null;
     private final NoteApi mService;
+    private static String token = "";
+    private static Context context;
+    private SharedPreferences settings;
+    private static final String data = "DATA";
+    private static final String usernameField = "USERNAME";
+    private static final String passwordField = "PASSWORD";
+    private static final String tokenField = "TOKEN";
 
+    private NoteClient() {
 
-    public NoteClient(final String token) {
-        //這邊的使用情境為全部 API 都對同一個 Server 操作
         OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
         httpClient.readTimeout(1000*30, TimeUnit.MILLISECONDS);
         httpClient.writeTimeout(600, TimeUnit.MILLISECONDS);
         httpClient.addInterceptor(new Interceptor() {
+
             @Override
             public Response intercept(Interceptor.Chain chain) throws IOException {
-                Request original = chain.request();
 
+                Request original = chain.request();
+                Request.Builder requestBuilder;
                 // Request customization: add request headers
-                Request.Builder requestBuilder = original.newBuilder()
-                        .header("x-access-token",token); // <-- this is the important line
+                if(!token.equals("")) {
+
+                    requestBuilder = original.newBuilder()
+                            .header("x-access-token", token); // <-- this is the important line
+
+                } else {
+
+                    requestBuilder = original.newBuilder();
+
+                }
 
                 Request request = requestBuilder.build();
                 return chain.proceed(request);
             }
         });
-        Log.d("APP","token " +token);
+
+        Log.d("APP", "token " + token);
 
         Gson gson = new GsonBuilder()
                 .setLenient()
@@ -57,83 +79,168 @@ public class NoteClient {
                 .build();
 
         mService = retrofit.create(NoteApi.class);
+
     }
-    public NoteClient() {
-        OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
-        httpClient.readTimeout(1000*30, TimeUnit.MILLISECONDS);
-        httpClient.writeTimeout(600, TimeUnit.MILLISECONDS);
-        httpClient.addInterceptor(new Interceptor() {
+
+    public static NoteClient getInstance() {
+
+        if (instance == null) {
+
+            instance = new NoteClient();
+
+        }
+
+        return instance;
+    }
+
+    public boolean alreadyLogin() {
+
+        if(readData().equals("")) {
+
+            return false;
+
+        } else {
+
+            token = readData();
+            instance = null;
+            return true;
+
+        }
+
+    }
+
+    public void logout() {
+
+        deleteData();
+        token = "";
+        instance = null;
+    }
+
+    public void setContext(Context context) {
+
+        this.context = context;
+
+    }
+
+    public String getUsername() {
+
+        settings = context.getSharedPreferences(data, 0);
+        return settings.getString(usernameField, "");
+
+    }
+
+    private String readData(){
+
+        settings = context.getSharedPreferences(data, 0);
+        return settings.getString(tokenField, "");
+
+    }
+
+    private void saveData(String token, String username, String password){
+
+        settings = context.getSharedPreferences(data, 0);
+        settings.edit()
+                .putString(usernameField, username)
+                .putString(passwordField, password)
+                .putString(tokenField, token)
+                .apply();
+
+    }
+
+    private void deleteData() {
+
+        settings = context.getSharedPreferences(data, 0);
+        settings.edit().remove(usernameField).apply();
+        settings.edit().remove(passwordField).apply();
+        settings.edit().remove(tokenField).apply();
+
+    }
+
+    public boolean login(final String username, final String password) {
+
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        Callable<Boolean> callable = new Callable<Boolean>() {
+
             @Override
-            public Response intercept(Interceptor.Chain chain) throws IOException {
-                Request original = chain.request();
+            public Boolean call() {
 
-                // Request customization: add request headers
-                Request.Builder requestBuilder = original.newBuilder();
-                //        .header("x-access-token",token); // <-- this is the important line
+                retrofit2.Call<Token> call = mService.login(username,password);
+                try {
 
-                Request request = requestBuilder.build();
-                return chain.proceed(request);
+                    retrofit2.Response<Token> response = call.execute();
+                    if (response.code() == 406 && response.message().equals("Not Acceptable")) {
+
+                        return false;
+
+                    } else {
+
+                        Token t =response.body();
+                        saveData(t.getToken(), username, password);
+                        token = t.getToken();
+                        instance = null;
+                        return true;
+
+                    }
+
+                } catch (Exception ex) {
+
+                    Log.d("app", "call: ex: " + ex.toString());
+                    return false;
+
+                }
             }
-        });
+        };
 
-        Gson gson = new GsonBuilder()
-                .setLenient()
-                .create();
+        Future<Boolean> future = executor.submit(callable);
+        executor.shutdown();
 
-        OkHttpClient client = httpClient.build();
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://todolist-token.herokuapp.com/")
-                .addConverterFactory(GsonConverterFactory.create(gson))
-                .client(client)
-                .build();
+        try {
 
-        mService = retrofit.create(NoteApi.class);
-    }
-    public static NoteClient getUserService() {
-        if (userService == null) {
-            userService = new NoteClient();
+            return future.get();
+
+        } catch (Exception ex) {
+
+            Log.d("app", "login: ex: " + ex.toString());
+            return  false;
+
         }
 
-        return userService;
-    }
-    public static NoteClient getNoteService(String token) {
-        if (noteService == null) {
-            noteService = new NoteClient(token);
-        }
-
-        return noteService;
     }
 
-    public void release() {
-        noteService=null;
+    public Call<String> register(String username, String password) {
+
+        return mService.register(username, password);
+
     }
 
-    public Call<Token> Login(String username, String password) {
-        return mService.login(username,password);
-    }
+    public Call<List<Note>> getNoteList() {
 
-    public Call<String> Register(String username,String password) {
-        return mService.register(username,password);
-    }
-
-    public Call<List<Note>> GetNoteList() {
         return mService.getNoteList();
+
     }
 
-    public Call<Note> GetNote(int id) {
+    public Call<Note> getNote(int id) {
+
         return mService.getNote(id);
+
     }
 
-    public Call<String> Post(Note note) {
+    public Call<String> post(Note note) {
+
         return mService.post(note);
+
     }
 
-    public Call<String> Update(Long id, Note note) {
-        return mService.update(id,note);
+    public Call<String> update(Long id, Note note) {
+
+        return mService.update(id, note);
+
     }
 
-    public Call<String> Delete(Long id) {
+    public Call<String> delete(Long id) {
+
         return mService.delete(id);
+
     }
 
 }

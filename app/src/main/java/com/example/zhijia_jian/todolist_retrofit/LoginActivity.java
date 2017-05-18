@@ -13,19 +13,6 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
-
-import okhttp3.Interceptor;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
-
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -36,18 +23,13 @@ public class LoginActivity extends AppCompatActivity {
     private TextView showclient;
     private TextView mainTitle;
     private TextView forgotTV;
-    private SharedPreferences settings;
-    private static final String data = "DATA";
-    private static final String usernameField = "USERNAME";
-    private static final String passwordField = "PASSWORD";
-    private static final String tokenField = "TOKEN";
 
-
-
+    NoteClient myClient;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
@@ -57,11 +39,10 @@ public class LoginActivity extends AppCompatActivity {
         sButton=(Button)findViewById(R.id.signupButton);
         forgotTV=(TextView) findViewById(R.id.forgotPassword);
 
-
-
         forgotTV.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
                 Toast.makeText(LoginActivity.this, "Forgot Password", Toast.LENGTH_SHORT).show();
                 //forgotTV.setTextColor(Color.BLACK);
 
@@ -72,11 +53,11 @@ public class LoginActivity extends AppCompatActivity {
         });
 
 
-        mainTitle =(TextView) findViewById(R.id.tv2);
+        mainTitle = (TextView) findViewById(R.id.tv2);
         mainTitle.setTypeface(Typeface.createFromAsset(getAssets()
                 , "fonts/dolphin.ttf"));
 
-        showclient =(TextView)findViewById(R.id.tv3);
+        showclient = (TextView)findViewById(R.id.tv3);
 
         lButton.setOnClickListener(new Button.OnClickListener(){
             @Override
@@ -92,43 +73,29 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
+//-------------------------------------------------------
 
-        String token=readData();
-        if(!token.equals(""))
-        {
-            gotoListPage(token);
+        myClient=NoteClient.getInstance();
+        myClient.setContext(this);
+
+        if(myClient.alreadyLogin()) {
+            gotoListPage();
         }
 
 
 
     }
-    public void gotoListPage(String token)
-    {
+    public void gotoListPage() {
+
         Intent intent = new Intent();
         intent.setClass(LoginActivity.this , ToDoListsActivity.class);
-        Bundle bun=new Bundle();
-        bun.putString("token",token);
-        intent.putExtras(bun);
         startActivity(intent);
-        settings = getSharedPreferences(data,0);
-        showclient.setText("");
-        Toast.makeText(LoginActivity.this, "Welcome "+ settings.getString(usernameField,""), Toast.LENGTH_SHORT).show();
-    }
-    public String readData(){
-        settings = getSharedPreferences(data,0);
-        return settings.getString(tokenField,"");
+        Toast.makeText(LoginActivity.this, "Welcome "+ myClient.getUsername(), Toast.LENGTH_SHORT).show();
 
     }
-    public void saveData(String token){
-        settings = getSharedPreferences(data,0);
-        settings.edit()
-                .putString(usernameField, nameET.getText().toString())
-                .putString(passwordField, pwET.getText().toString())
-                .putString(tokenField,token)
-                .commit();
-    }
-    private void handleSignupButton()
-    {
+
+
+    private void handleSignupButton() {
 
         runOnUiThread(new Runnable() {
             @Override
@@ -136,16 +103,19 @@ public class LoginActivity extends AppCompatActivity {
                 showclient.setText("Registering...");
             }
         });
+
         final String name= nameET.getText().toString();
         final String pass=pwET.getText().toString();
-        NoteClient myClient=NoteClient.getUserService();
-        retrofit2.Call<String> call = myClient.Register(name,pass);
+        myClient=NoteClient.getInstance();
+        retrofit2.Call<String> call = myClient.register(name,pass);
 
         call.enqueue(new retrofit2.Callback<String>() {
+
             @Override
             public void onResponse(retrofit2.Call<String> call, retrofit2.Response<String> response) {
+
                 Log.d("APP", "SignupButton onResponse: "+response.code());
-                if(response.code()==406 && response.message().toString().equals("Not Acceptable")) {
+                if(response.code()==406 && response.message().equals("Not Acceptable")) {
                     showclient.setText("\""+name+"\" has been registered.");
                 }
                 else {
@@ -169,36 +139,18 @@ public class LoginActivity extends AppCompatActivity {
         });
         final String name= nameET.getText().toString();
         final String pass=pwET.getText().toString();
-        NoteClient myClient=NoteClient.getUserService();
-        retrofit2.Call<Token> call = myClient.Login(name,pass);
-//        try {
-//             retrofit2.Response<Token> response = call.execute();
-//             Token t = response.body();
-//        } catch (Exception ex) {
-//
-//        }
 
-        call.enqueue(new retrofit2.Callback<Token>() {
-            @Override
-            public void onResponse(retrofit2.Call<Token> call, retrofit2.Response<Token> response) {
-                Log.d("APP", "LoginButton onResponse: "+response.code());
+        myClient=NoteClient.getInstance();
+        Boolean loginSuccess = myClient.login(name,pass);
 
-                if (response.code()==406 && response.message().toString().equals("Not Acceptable"))
-                    showclient.setText("Username or Password is not correct!");
-                else {
+        if(loginSuccess) {
+            gotoListPage();
 
-                    Token token =response.body();
-                    saveData(token.getToken());
-                    gotoListPage(token.getToken());
+        } else {
+            showclient.setText("Username or Password is not correct!");
 
-                }
-            }
+        }
 
-            @Override
-            public void onFailure(retrofit2.Call<Token> call, Throwable t) {
-                Log.d("APP", "LoginButton onFailure: " + t.toString());
-            }
-        });
     }
 
 

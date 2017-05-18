@@ -55,7 +55,7 @@ public class Note {
         this.title = title;
     }
 
-    public Long getId() {
+    public long getId() {
         return id;
     }
 
