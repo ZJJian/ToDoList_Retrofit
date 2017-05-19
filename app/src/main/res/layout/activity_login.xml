@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="@color/colorPrimaryDark"
     app:elevation="0dp"
-    tools:context="com.example.zhijia_jian.todolist_retrofit.LoginActivity">
+    tools:context="com.example.zhijia_jian.todolist_retrofit.MainActivity">
     <!--android:layout_margin="40dp"-->
 
     <!--<TextView-->

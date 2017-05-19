@@ -1,4 +1,4 @@
-package com.example.zhijia_jian.todolist_retrofit;
+package com.example.zhijia_jian.todolist_retrofit.Models;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
@@ -20,7 +20,6 @@ import org.greenrobot.greendao.annotation.NotNull;
 
 public class Note {
 
-    //@Id
     @SerializedName("id")
     @Expose
     private Long id;
@@ -29,14 +28,13 @@ public class Note {
     @Expose
     private String content;
 
-    private String comment;
-    private java.util.Date date;
-
     @SerializedName("title")
     @Expose
     private String title;
 
+    private String comment;
 
+    private java.util.Date date;
 
     public Note() {
     }
@@ -45,8 +43,6 @@ public class Note {
         this.id = id;
     }
 
-
-    //@Keep
     public Note(Long id, String text, String comment, java.util.Date date, String title) {
         this.id = id;
         this.content = text;
@@ -63,12 +59,10 @@ public class Note {
         this.id = id;
     }
 
-
     public String getText() {
         return content;
     }
 
-    /** Not-null value; ensure this value is available before it is saved to the database. */
     public void setText(String text) {
         this.content = text;
     }

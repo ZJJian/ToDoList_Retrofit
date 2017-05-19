@@ -1,9 +1,11 @@
-package com.example.zhijia_jian.todolist_retrofit;
+package com.example.zhijia_jian.todolist_retrofit.Services;
+
+import com.example.zhijia_jian.todolist_retrofit.Models.Note;
+import com.example.zhijia_jian.todolist_retrofit.Models.Token;
 
 import java.util.List;
 
 import retrofit2.Call;
-import retrofit2.Response;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
 import retrofit2.http.Field;
@@ -15,10 +17,10 @@ import retrofit2.http.Path;
 
 public interface NoteApi {
 
-    //LoginActivity
+    //MainActivity
     @POST("/user/login")
     @FormUrlEncoded
-    Call<Token> login(@Field("username") String username,@Field("password") String password);
+    Call<Token> login(@Field("username") String username, @Field("password") String password);
 
 
     //registerActivity

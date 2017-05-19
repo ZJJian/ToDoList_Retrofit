@@ -1,7 +1,6 @@
 package com.example.zhijia_jian.todolist_retrofit;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
@@ -13,8 +12,11 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.zhijia_jian.todolist_retrofit.Activity.ToDoListsActivity;
+import com.example.zhijia_jian.todolist_retrofit.Services.NoteClient;
 
-public class LoginActivity extends AppCompatActivity {
+
+public class MainActivity extends AppCompatActivity {
 
     private Button sButton;
     private Button lButton;
@@ -25,7 +27,6 @@ public class LoginActivity extends AppCompatActivity {
     private TextView forgotTV;
 
     NoteClient myClient;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,7 +44,7 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 
-                Toast.makeText(LoginActivity.this, "Forgot Password", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "Forgot Password", Toast.LENGTH_SHORT).show();
                 //forgotTV.setTextColor(Color.BLACK);
 
                 Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.google.com"));
@@ -73,7 +74,6 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
-//-------------------------------------------------------
 
         myClient=NoteClient.getInstance();
         myClient.setContext(this);
@@ -82,18 +82,16 @@ public class LoginActivity extends AppCompatActivity {
             gotoListPage();
         }
 
-
-
     }
+
     public void gotoListPage() {
 
         Intent intent = new Intent();
-        intent.setClass(LoginActivity.this , ToDoListsActivity.class);
+        intent.setClass(MainActivity.this , ToDoListsActivity.class);
         startActivity(intent);
-        Toast.makeText(LoginActivity.this, "Welcome "+ myClient.getUsername(), Toast.LENGTH_SHORT).show();
+        Toast.makeText(MainActivity.this, "Welcome "+ myClient.getUsername(), Toast.LENGTH_SHORT).show();
 
     }
-
 
     private void handleSignupButton() {
 
@@ -129,8 +127,9 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
     }
-    private void handleLoginButton()
-    {
+
+    private void handleLoginButton() {
+
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -152,7 +151,5 @@ public class LoginActivity extends AppCompatActivity {
         }
 
     }
-
-
 
 }

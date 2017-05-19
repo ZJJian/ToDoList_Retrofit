@@ -1,10 +1,12 @@
-package com.example.zhijia_jian.todolist_retrofit;
+package com.example.zhijia_jian.todolist_retrofit.Services;
 
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
 
+import com.example.zhijia_jian.todolist_retrofit.Models.Note;
+import com.example.zhijia_jian.todolist_retrofit.Models.Token;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 

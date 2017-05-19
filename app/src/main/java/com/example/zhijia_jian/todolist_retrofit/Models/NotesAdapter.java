@@ -1,4 +1,4 @@
-package com.example.zhijia_jian.todolist_retrofit;
+package com.example.zhijia_jian.todolist_retrofit.Models;
 
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
@@ -6,6 +6,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
+import com.example.zhijia_jian.todolist_retrofit.R;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,6 +28,7 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
         //public TextView comment;
 
         public NoteViewHolder(View itemView, final NoteClickListener clickListener) {
+
             super(itemView);
             text = (TextView) itemView.findViewById(R.id.textTV);
             //comment = (TextView) itemView.findViewById(R.id.timeTV);
@@ -41,11 +45,13 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
     }
 
     public NotesAdapter(NoteClickListener clickListener) {
+
         this.clickListener = clickListener;
         this.dataset = new ArrayList<Note>();
     }
 
     public void setNotes(@NonNull List<Note> notes) {
+
         dataset = notes;
         notifyDataSetChanged();
     }
@@ -56,6 +62,7 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
 
     @Override
     public NotesAdapter.NoteViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_note, parent, false);
         return new NoteViewHolder(view, clickListener);
@@ -63,6 +70,7 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
 
     @Override
     public void onBindViewHolder(NotesAdapter.NoteViewHolder holder, int position) {
+
         Note note = dataset.get(position);
         holder.title.setText(note.getTitle());
         holder.text.setText(note.getText());
@@ -71,6 +79,7 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NoteViewHold
 
     @Override
     public int getItemCount() {
+
         return dataset.size();
     }
 }

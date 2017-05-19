@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_margin="30dp"
-    tools:context="com.example.zhijia_jian.todolist_retrofit.AddNoteActivity">
+    tools:context="com.example.zhijia_jian.todolist_retrofit.Activity.AddNoteActivity">
 
 
 

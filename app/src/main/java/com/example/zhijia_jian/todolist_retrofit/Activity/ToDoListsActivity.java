@@ -1,4 +1,4 @@
-package com.example.zhijia_jian.todolist_retrofit;
+package com.example.zhijia_jian.todolist_retrofit.Activity;
 
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -17,6 +17,13 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
+
+import com.example.zhijia_jian.todolist_retrofit.MainActivity;
+import com.example.zhijia_jian.todolist_retrofit.Models.Note;
+import com.example.zhijia_jian.todolist_retrofit.Services.NoteClient;
+import com.example.zhijia_jian.todolist_retrofit.Models.NotesAdapter;
+import com.example.zhijia_jian.todolist_retrofit.R;
+
 import java.util.List;
 import retrofit2.Call;
 
@@ -25,13 +32,7 @@ public class ToDoListsActivity extends AppCompatActivity {
     public static final String TAG = "app";
     private NotesAdapter notesAdapter;
     private List<Note> notes;
-    //private String token;
     private Toolbar mToolbar;
-    private SharedPreferences settings;
-    private static final String data = "DATA";
-    private static final String usernameField = "USERNAME";
-    private static final String passwordField = "PASSWORD";
-    private static final String tokenField = "TOKEN";
     private static final int EDIT=1;
 
     @Override
@@ -39,13 +40,10 @@ public class ToDoListsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_to_do_lists);
 
-
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(mToolbar);
 
         setUpViews();
-//        Bundle bun = this.getIntent().getExtras();
-//        token=bun.getString("token");
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -62,6 +60,7 @@ public class ToDoListsActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+
         mToolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem item) {
@@ -74,7 +73,6 @@ public class ToDoListsActivity extends AppCompatActivity {
                 return false;
             }
         });
-
 
     }
 
@@ -95,17 +93,19 @@ public class ToDoListsActivity extends AppCompatActivity {
         return true;
 
     }
+
     private void handelLogOut() {
 
         NoteClient myClient=NoteClient.getInstance();
         myClient.logout();
         Intent intent = new Intent();
-        intent.setClass(ToDoListsActivity.this , LoginActivity.class);
+        intent.setClass(ToDoListsActivity.this , MainActivity.class);
         startActivityForResult(intent, EDIT);
 
     }
 
     protected void setUpViews() {
+
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recyclerViewNotes);
         //noinspection ConstantConditions
         recyclerView.setHasFixedSize(true);
@@ -115,12 +115,13 @@ public class ToDoListsActivity extends AppCompatActivity {
         recyclerView.setAdapter(notesAdapter);
 
     }
-    private void updateNotes()
-    {
+
+    private void updateNotes() {
+
         NoteClient myClient=NoteClient.getInstance();
         Call<List<Note>> call = myClient.getNoteList();
-
         call.enqueue(new retrofit2.Callback<List<Note>>() {
+
             @Override
             public void onResponse(Call<List<Note>> call, retrofit2.Response<List<Note>> response) {
                 Log.d(TAG, "onResponse: ");
@@ -134,13 +135,15 @@ public class ToDoListsActivity extends AppCompatActivity {
             }
         });
     }
-    private void DeleteNote(Long noteId)
-    {
+
+    private void DeleteNote(Long noteId) {
+
         Log.d(TAG, "DeleteNote: ");
         NoteClient myClient=NoteClient.getInstance();
         Call<String> call = myClient.delete(noteId);
 
         call.enqueue(new retrofit2.Callback<String>() {
+
             @Override
             public void onResponse(Call<String> call, retrofit2.Response<String> response) {
                 Log.d(TAG, "DeleteNoteonResponse: "+response.body());
@@ -153,27 +156,29 @@ public class ToDoListsActivity extends AppCompatActivity {
             }
         });
     }
+
     NotesAdapter.NoteClickListener noteClickListener = new NotesAdapter.NoteClickListener() {
+
         @Override
         public void onNoteClick(int position) {
+
             Note note = notesAdapter.getNote(position);
-
-            getAlertDialog(note,"Edit or Delete this message").show();
-
+            getAlertDialog(note).show();
 
         }
     };
-    private AlertDialog getAlertDialog(final Note note, String message){
 
+    private AlertDialog getAlertDialog(final Note note){
 
         final Long noteId = note.getId();
-
 
         AlertDialog.Builder builder = new AlertDialog.Builder(ToDoListsActivity.this);
         builder.setTitle(note.getTitle());
         builder.setMessage(note.getText());
+
         //set "delete" button
         builder.setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+
             @Override
             public void onClick(DialogInterface dialog, int which) {
 
@@ -186,8 +191,10 @@ public class ToDoListsActivity extends AppCompatActivity {
                 Toast.makeText(ToDoListsActivity.this, "You clicked \"delete\"", Toast.LENGTH_SHORT).show();
             }
         });
+
         //set "edit" button
         builder.setNegativeButton("Edit", new DialogInterface.OnClickListener() {
+
             @Override
             public void onClick(DialogInterface dialog, int which) {
 
@@ -195,7 +202,6 @@ public class ToDoListsActivity extends AppCompatActivity {
                 intent.setClass(ToDoListsActivity.this , AddNoteActivity.class);
                 Bundle bun=new Bundle();
                 bun.putLong("noteId",noteId);
-                //bun.putString("token",token);
                 bun.putString("content",note.getText());
                 bun.putString("title",note.getTitle());
                 intent.putExtras(bun);
@@ -207,13 +213,12 @@ public class ToDoListsActivity extends AppCompatActivity {
 
         return builder.create();
     }
-    public int getIndex(long noteId,List<Note> notes)
-    {
-        for (int i = 0; i < notes.size(); i++)
-        {
+
+    public int getIndex(long noteId,List<Note> notes) {
+
+        for (int i = 0; i < notes.size(); i++) {
             Note n=notes.get(i);
-            if (n.getId() == noteId)
-            {
+            if (n.getId() == noteId) {
                 return i;
             }
         }

@@ -1,4 +1,4 @@
-package com.example.zhijia_jian.todolist_retrofit;
+package com.example.zhijia_jian.todolist_retrofit.Activity;
 
 
 import android.content.Intent;
@@ -8,6 +8,10 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+
+import com.example.zhijia_jian.todolist_retrofit.Models.Note;
+import com.example.zhijia_jian.todolist_retrofit.Services.NoteClient;
+import com.example.zhijia_jian.todolist_retrofit.R;
 
 import java.text.DateFormat;
 import java.util.Date;
@@ -21,9 +25,9 @@ public class AddNoteActivity extends AppCompatActivity {
     //private String token;
     private Long noteId;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_note);
 
@@ -32,8 +36,6 @@ public class AddNoteActivity extends AppCompatActivity {
         texteditText = (EditText) findViewById(R.id.textET);
 
         Bundle bun = this.getIntent().getExtras();
-//        token=bun.getString("token");
-//        Log.d("app", token);
         noteId=bun.getLong("noteId");
         if(noteId != -1) {
             editText.setText(bun.getString("title"));
@@ -44,6 +46,7 @@ public class AddNoteActivity extends AppCompatActivity {
     }
 
     public void onAddButtonClick(View view) {
+
         String noteText = editText.getText().toString();
         String textnoteText = texteditText.getText().toString();
 
@@ -55,29 +58,27 @@ public class AddNoteActivity extends AppCompatActivity {
         note.setDate(new Date());
         note.setText(textnoteText);
 
-        if(noteId==-1)
+        if(noteId==-1) {
             AddOneNote(note);
-        else
+        } else {
             UpdateNote(note);
+        }
 
     }
     private void UpdateNote(Note note)
     {
+
         NoteClient myClient = NoteClient.getInstance();
         Call<String> call = myClient.update(noteId, note);
 
         call.enqueue(new retrofit2.Callback<String>() {
+
             @Override
             public void onResponse(Call<String> call, retrofit2.Response<String> response) {
                 Log.d("APP", "UpdateNoteonResponse: "+response.body().toString());
                 Intent intent = new Intent();
-//                Bundle bun=new Bundle();
-//                bun.putString("token",token);
-//                intent.putExtras(bun);
                 setResult(RESULT_OK,intent);
                 finish();
-
-
             }
 
             @Override
@@ -91,19 +92,15 @@ public class AddNoteActivity extends AppCompatActivity {
 
         NoteClient myClient=NoteClient.getInstance();
         Call<String> call = myClient.post(note);
-
         call.enqueue(new retrofit2.Callback<String>() {
+
             @Override
             public void onResponse(Call<String> call, retrofit2.Response<String> response) {
-                Log.d("APP", "AddOneNoteResponse: "+response.body().toString());
 
+                Log.d("APP", "AddOneNoteResponse: "+response.body().toString());
                 Intent intent = new Intent();
-//                Bundle bun=new Bundle();
-//                bun.putString("token",token);
-//                intent.putExtras(bun);
                 setResult(RESULT_OK,intent);
                 finish();
-
 
             }
 

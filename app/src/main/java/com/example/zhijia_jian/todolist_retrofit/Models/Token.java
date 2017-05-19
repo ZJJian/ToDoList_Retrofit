@@ -1,15 +1,13 @@
-package com.example.zhijia_jian.todolist_retrofit;
+package com.example.zhijia_jian.todolist_retrofit.Models;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 public class Token {
 
-    //@Id
     @SerializedName("token")
     @Expose
     private String token;
-
 
     public Token() {
     }
