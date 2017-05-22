@@ -2,7 +2,6 @@ package com.example.zhijia_jian.todolist_retrofit.Activity;
 
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -21,7 +20,7 @@ import android.widget.Toast;
 import com.example.zhijia_jian.todolist_retrofit.MainActivity;
 import com.example.zhijia_jian.todolist_retrofit.Models.Note;
 import com.example.zhijia_jian.todolist_retrofit.Services.NoteClient;
-import com.example.zhijia_jian.todolist_retrofit.Models.NotesAdapter;
+import com.example.zhijia_jian.todolist_retrofit.NotesAdapter;
 import com.example.zhijia_jian.todolist_retrofit.R;
 
 import java.util.List;

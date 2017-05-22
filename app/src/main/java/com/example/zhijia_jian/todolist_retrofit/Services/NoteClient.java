@@ -3,6 +3,7 @@ package com.example.zhijia_jian.todolist_retrofit.Services;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.example.zhijia_jian.todolist_retrofit.Models.Note;
@@ -31,7 +32,7 @@ public class NoteClient {
     private static NoteClient instance = null;
     private final NoteApi mService;
     private static String token = "";
-    private static Context context;
+    private Context context;
     private SharedPreferences settings;
     private static final String data = "DATA";
     private static final String usernameField = "USERNAME";
@@ -51,7 +52,7 @@ public class NoteClient {
                 Request original = chain.request();
                 Request.Builder requestBuilder;
                 // Request customization: add request headers
-                if(!token.equals("")) {
+                if(!TextUtils.isEmpty(token)) {
 
                     requestBuilder = original.newBuilder()
                             .header("x-access-token", token); // <-- this is the important line
@@ -97,14 +98,13 @@ public class NoteClient {
 
     public boolean alreadyLogin() {
 
-        if(readData().equals("")) {
+        if(TextUtils.isEmpty(readData())) {
 
             return false;
 
         } else {
 
             token = readData();
-            instance = null;
             return true;
 
         }
@@ -179,7 +179,6 @@ public class NoteClient {
                         Token t =response.body();
                         saveData(t.getToken(), username, password);
                         token = t.getToken();
-                        instance = null;
                         return true;
 
                     }
